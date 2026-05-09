@@ -1,0 +1,96 @@
+# AGENTS.md
+
+本文件是给后续 AI agent 和维护者的项目指引。每次新增、修改或删除需求、功能、接口、数据结构、运行方式时，都要同步更新本文件；如影响项目介绍、启动方式或部署说明，也要同步更新 `README.md`。
+
+## 项目概览
+
+- 项目名称：`zhiboba`
+- 业务定位：中文体育赛事与新闻聚合站，当前页面品牌为“球赛速递”。
+- 核心能力：展示赛事赛程、比分状态、体育新闻、带图内容、热门排行和常用入口。
+- 数据来源：公开体育数据和新闻源，包括 ESPN scoreboard、TheSportsDB、BBC/ESPN RSS。
+- 数据存储：PostgreSQL，代码默认读取 `POSTGRES_SESSION_POOL_URL`、`POSTGRES_URL` 或 `DATABASE_URL`。
+
+## 技术栈
+
+- Next.js `15` App Router
+- React `19`
+- Tailwind CSS `3`
+- PostgreSQL，Node `pg`
+- ESLint `9` + `eslint-config-next`
+- Netlify Functions，用于定时同步体育内容
+
+## 主要目录
+
+- `app/page.js`：首页服务端入口，负责首屏取数并渲染客户端组件。
+- `app/HomeClient.js`：客户端首页，包含筛选、搜索、赛事、新闻、图片/集锦、排行等 UI。
+- `app/layout.js`：根布局和页面 metadata。
+- `app/globals.css`：全局样式和 Tailwind 入口。
+- `app/api/matches/route.js`：赛事列表接口。
+- `app/api/news/route.js`：新闻列表接口。
+- `app/api/videos/route.js`：带图内容接口，复用新闻表。
+- `app/api/appointments/route.js`：新闻预约数据接口。
+- `README.md`：项目介绍、启动方式、技术栈和数据同步说明。
+- `lib/db.js`：PostgreSQL 连接池。
+- `lib/sportsData.js`：查询赛事、新闻、带图内容。
+- `lib/sportsSync.js`：拉取外部源并 upsert 到数据库。
+- `netlify/functions/sync-sports-content.js`：Netlify 每小时同步函数。
+- `netlify.toml`：Netlify 函数目录和打包配置。
+
+## 运行命令
+
+- 安装依赖：`npm install`
+- 本地开发：`npm run dev`
+- 构建：`npm run build`
+- 启动生产构建：`npm run start`
+- 检查代码：`npm run lint`
+
+## 环境变量
+
+- `POSTGRES_SESSION_POOL_URL`：优先使用的 PostgreSQL 连接串。
+- `POSTGRES_URL`：备用 PostgreSQL 连接串。
+- `DATABASE_URL`：备用 PostgreSQL 连接串。
+- `THESPORTSDB_API_KEY`：TheSportsDB API key；为空时使用公开测试 key `3`。
+- `FOOTBALL_DATA_TOKEN`、`BALLDONTLIE_API_KEY`：已在 `.env.example` 预留，当前代码未实际使用。
+
+不要提交真实密钥。新增依赖环境变量时，同步更新 `.env.example` 和本文件。
+
+## 数据表约定
+
+当前代码依赖以下 PostgreSQL 表：
+
+- `public.sports_matches`
+- `public.sports_articles`
+- `public.sports_sync_runs`
+- `public.sports_news_appointments`
+
+仓库当前没有数据库迁移或建表脚本。修改字段、索引、约束或新增表时，需要补充可追溯的迁移说明或脚本，并同步更新本文件。
+
+## 数据同步
+
+- Netlify 定时函数 `sync-sports-content` 每小时执行一次。
+- 同步逻辑在 `lib/sportsSync.js`。
+- 赛事来源：ESPN 足球/欧冠/NBA scoreboard、TheSportsDB 联赛事件。
+- 新闻来源：BBC Sport Football、ESPN NBA、ESPN Soccer RSS。
+- 同步结果写入 `sports_sync_runs`，状态包括 `success`、`partial`、`failed`。
+
+## 开发规范
+
+- 优先保持现有 JavaScript 风格；当前项目没有 TypeScript。
+- UI 改动优先使用 Tailwind class，沿用现有颜色：`brand`、`brand.dark`、`brand.deeper`、`accent`。
+- API Route 使用 `runtime = "nodejs"` 和 `dynamic = "force-dynamic"`，避免数据库访问跑到 Edge Runtime。
+- 数据查询必须使用参数化 SQL，不要拼接用户输入。
+- 外部链接保留来源 URL，图片使用远程 URL；当前页面已为未知远程图片禁用 Next 图片域名限制。
+- 新增功能后至少运行 `npm run lint`；涉及构建、路由或部署配置时运行 `npm run build`。
+- 如果修改 Netlify、数据库连接或定时同步逻辑，需说明本地无法验证的外部依赖。
+
+## 文件操作安全
+
+- 禁止批量删除文件或目录。
+- 不要使用递归删除、通配符删除、`find ... -delete`、`xargs rm` 等批量删除方式。
+- 如确需删除文件，只能一次删除一个明确路径的普通文件，并在删除前确认目标不是目录。
+
+## AGENTS 文件命名
+
+- 本项目使用根目录 `AGENTS.md`。
+- `AGENTS.md` 是当前 AI coding agent 生态中常见的约定文件名，优先使用全大写。
+- 如未来子目录有特殊规则，可在对应子目录增加更近作用域的 `AGENTS.md`，其规则只覆盖该目录及子目录。
