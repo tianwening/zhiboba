@@ -6,7 +6,7 @@
 
 - 项目名称：`zhiboba`
 - 业务定位：中文体育赛事与新闻聚合站，当前页面品牌为“球赛速递”。
-- 核心能力：展示赛事赛程、比分状态、中文体育新闻、直播入口、近三天录像和热门排行。
+- 核心能力：展示赛事赛程、比分状态、中文体育新闻、直播入口、近三天录像、来源跳转和热门排行。
 - 数据来源：公开体育数据和中文新闻/录像源，包括 ESPN scoreboard、TheSportsDB、中国新闻网体育 RSS、虎扑电竞 RSS、直播吧录像页面。
 - 数据存储：PostgreSQL，代码默认读取 `POSTGRES_SESSION_POOL_URL`、`POSTGRES_URL` 或 `DATABASE_URL`。
 
@@ -72,8 +72,9 @@
 - 赛事来源：ESPN 足球/欧冠/NBA scoreboard、TheSportsDB 联赛事件。
 - 赛事联盟和球队名称需通过 `lib/sportsI18n.js` 中文化；同步入库和查询展示都应调用该映射，避免页面出现英文赛事信息。
 - 新闻来源：中国新闻网体育 RSS，按标题关键词归类到足球、篮球、电竞；虎扑电竞 RSS。
-- 新闻图片优先使用 RSS 图片字段；缺失时抓原文页的 `og:image`、`twitter:image`、JSON-LD 图片或正文首图入库。若上游页面不暴露可用图片，前端继续显示兜底占位。
-- 录像来源：直播吧篮球、足球录像页面；录像写入 `sports_articles` 并通过 `raw.contentType = "recording"` 标记，查询仅返回近三天内容。
+- 新闻图片优先使用 RSS 图片字段；缺失时抓原文页的 `og:image`、`twitter:image`、JSON-LD 图片或正文首图入库。若上游页面不暴露可用图片，或远程图片加载失败，前端继续显示兜底占位。
+- 录像来源：直播吧篮球、足球录像页面；录像写入 `sports_articles` 并通过 `raw.contentType = "recording"` 标记，查询仅返回近三天内容。录像缩略图和标题都应保留来源跳转。
+- 赛事数据按钮优先使用原始数据里的技术统计、比分、赛况链接，缺失时回退到赛事来源链接。
 - 同步会清理旧的 BBC/ESPN 英文新闻记录。
 - 同步结果写入 `sports_sync_runs`，状态包括 `success`、`partial`、`failed`。
 

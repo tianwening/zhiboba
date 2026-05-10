@@ -579,13 +579,19 @@ function MatchCard({ match }) {
             {match.action}
           </a>
         ) : (
-          <span className="whitespace-nowrap rounded-md border border-brand bg-brand px-3 py-2 text-sm font-extrabold text-white">
+        <span className="whitespace-nowrap rounded-md border border-brand bg-brand px-3 py-2 text-sm font-extrabold text-white">
             {match.action}
           </span>
         )}
-        <span className="whitespace-nowrap rounded-md border border-[#d9e2ee] px-3 py-2 text-sm font-extrabold text-brand-deeper">
-          数据
-        </span>
+        {match.dataUrl ? (
+          <a className="whitespace-nowrap rounded-md border border-[#d9e2ee] px-3 py-2 text-sm font-extrabold text-brand-deeper transition hover:border-brand hover:text-brand" href={match.dataUrl} target="_blank" rel="noreferrer">
+            数据
+          </a>
+        ) : (
+          <span className="whitespace-nowrap rounded-md border border-[#d9e2ee] px-3 py-2 text-sm font-extrabold text-brand-deeper">
+            数据
+          </span>
+        )}
       </div>
     </article>
   );
@@ -644,7 +650,13 @@ function NewsItem({ item, index }) {
 }
 
 function ImageFrame({ src, alt }) {
-  if (!src) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  if (!src || failed) {
     return (
       <div className="grid aspect-[16/9] w-full place-items-center rounded-md bg-[linear-gradient(135deg,#eef4fb,#dce8f4)] text-sm font-extrabold text-brand-deeper">
         体育速递
@@ -658,6 +670,7 @@ function ImageFrame({ src, alt }) {
       src={src}
       alt={alt}
       loading="lazy"
+      onError={() => setFailed(true)}
     />
   );
 }
@@ -682,7 +695,15 @@ function VideoPanel({ videos: videoItems, loading }) {
                 )}
               </a>
               <div className="min-w-0">
-                <h3 className="mb-1 line-clamp-2 text-sm font-extrabold leading-snug">{video.title}</h3>
+                <h3 className="mb-1 line-clamp-2 text-sm font-extrabold leading-snug">
+                  {video.sourceUrl ? (
+                    <a className="transition hover:text-brand" href={video.sourceUrl} target="_blank" rel="noreferrer">
+                      {video.title}
+                    </a>
+                  ) : (
+                    video.title
+                  )}
+                </h3>
                 <p className="truncate text-xs text-[#667085]">{video.meta}</p>
               </div>
             </article>
