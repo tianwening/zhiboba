@@ -4,6 +4,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+const DISPLAY_TIME_ZONE = "Asia/Shanghai";
+
 const sports = [
   { key: "all", label: "全部" },
   { key: "football", label: "足球" },
@@ -90,6 +92,7 @@ const liveSources = [
 
 function dateTabs() {
   const formatter = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: DISPLAY_TIME_ZONE,
     month: "2-digit",
     day: "2-digit",
   });
@@ -141,6 +144,7 @@ function formatUpdatedAt(value) {
   }
 
   return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: DISPLAY_TIME_ZONE,
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -161,6 +165,7 @@ function useSportsContent({
   initialUpdatedAt,
 }) {
   const isFirstLoad = useRef(true);
+  const cache = useRef(new Map());
   const [state, setState] = useState({
     matches: initialMatches,
     news: initialNews,
@@ -177,50 +182,51 @@ function useSportsContent({
     }
 
     const controller = new AbortController();
+    const cacheKey = JSON.stringify({ date, sport, status, newsCategory, query });
 
     async function load() {
+      const cached = cache.current.get(cacheKey);
+      if (cached) {
+        setState((current) => ({
+          ...current,
+          ...cached,
+          loading: false,
+          error: "",
+        }));
+        return;
+      }
+
       setState((current) => ({ ...current, loading: true, error: "" }));
 
       try {
-        const matchUrl = apiUrl("/api/matches", {
+        const contentUrl = apiUrl("/api/content", {
           date,
           sport,
           status,
-          q: query,
-        });
-        const newsUrl = apiUrl("/api/news", {
-          category: newsCategory,
-          q: query,
-        });
-        const videoUrl = apiUrl("/api/videos", {
           category: newsCategory,
           q: query,
         });
 
-        const [matchResponse, newsResponse, videoResponse] = await Promise.all([
-          fetch(matchUrl, { signal: controller.signal }),
-          fetch(newsUrl, { signal: controller.signal }),
-          fetch(videoUrl, { signal: controller.signal }),
-        ]);
+        const response = await fetch(contentUrl, { signal: controller.signal });
 
-        if (!matchResponse.ok || !newsResponse.ok || !videoResponse.ok) {
+        if (!response.ok) {
           throw new Error("内容加载失败");
         }
 
-        const [matchPayload, newsPayload, videoPayload] = await Promise.all([
-          matchResponse.json(),
-          newsResponse.json(),
-          videoResponse.json(),
-        ]);
+        const payload = await response.json();
+        const nextState = {
+          matches: payload.matches ?? [],
+          news: payload.articles ?? [],
+          videos: payload.videos ?? [],
+          updatedAt: payload.updatedAt ?? "",
+        };
+
+        cache.current.set(cacheKey, nextState);
 
         setState({
-          matches: matchPayload.matches ?? [],
-          news: newsPayload.articles ?? [],
-          videos: videoPayload.videos ?? [],
+          ...nextState,
           loading: false,
           error: "",
-          updatedAt:
-            matchPayload.updatedAt ?? newsPayload.updatedAt ?? videoPayload.updatedAt ?? "",
         });
       } catch (error) {
         if (error.name === "AbortError") {
@@ -322,11 +328,13 @@ export default function HomeClient({
       <SiteHeader
         nav={nav}
         query={query}
+        loading={loading}
         onQueryChange={setQuery}
         onSearchSubmit={handleSearchSubmit}
         onSportNav={handleSportNav}
         onNav={handleNav}
       />
+      <div className="h-[164px] sm:h-[156px] lg:h-[68px]" aria-hidden="true" />
 
       <main className="mx-auto max-w-[1240px] px-3 py-3 sm:px-5 sm:py-5">
         <HeroBand updatedAt={updatedAt} />
@@ -382,11 +390,13 @@ export default function HomeClient({
 function SiteHeader({
   nav,
   query,
+  loading,
   onQueryChange,
   onSearchSubmit,
   onSportNav,
   onNav,
 }) {
+  const [scrolled, setScrolled] = useState(false);
   const navItems = [
     { label: "首页", nav: "home" },
     { label: "足球", sport: "football" },
@@ -396,9 +406,23 @@ function SiteHeader({
     { label: "录像", nav: "videos" },
   ];
 
+  useEffect(() => {
+    function handleScroll() {
+      setScrolled(window.scrollY > 8);
+    }
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-20 bg-brand-dark text-white shadow-[0_2px_16px_rgba(15,63,58,0.24)]">
-      <div className="mx-auto grid max-w-[1240px] grid-cols-1 gap-2 px-3 py-2.5 sm:px-5 lg:min-h-[68px] lg:grid-cols-[auto_minmax(0,1fr)_280px] lg:items-center lg:gap-5 lg:py-0">
+    <header className={`fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-brand-dark text-white transition-shadow ${
+      scrolled ? "shadow-[0_10px_28px_rgba(15,63,58,0.26)]" : "shadow-[0_2px_16px_rgba(15,63,58,0.18)]"
+    }`}>
+      <div className={`mx-auto grid max-w-[1240px] grid-cols-1 gap-2 px-3 py-2.5 transition-all sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_340px] lg:items-center lg:gap-5 ${
+        scrolled ? "lg:min-h-[58px] lg:py-1" : "lg:min-h-[68px] lg:py-0"
+      }`}>
         <a
           className="flex min-w-0 items-center gap-2"
           href="#"
@@ -459,10 +483,11 @@ function SiteHeader({
             onChange={(event) => onQueryChange(event.target.value)}
           />
           <button
-            className="w-14 flex-none bg-white text-sm font-bold text-brand-deeper sm:w-16 sm:text-base"
+            className="w-14 flex-none bg-white text-sm font-bold text-brand-deeper transition disabled:cursor-wait disabled:text-brand-deeper/60 sm:w-16 sm:text-base"
             type="submit"
+            disabled={loading}
           >
-            搜索
+            {loading ? "搜索中" : "搜索"}
           </button>
         </form>
       </div>
@@ -801,7 +826,7 @@ function TabGroup({ items, activeKey, onChange, includeText = false, compact = f
 
 function Panel({ id, className = "", children }) {
   return (
-    <section id={id} className={`overflow-hidden rounded-lg border border-[#d9e2ee] bg-white shadow-[0_8px_24px_rgba(24,34,48,0.05)] ${className}`}>
+    <section id={id} className={`scroll-mt-[176px] overflow-hidden rounded-lg border border-[#d9e2ee] bg-white shadow-[0_8px_24px_rgba(24,34,48,0.05)] lg:scroll-mt-[76px] ${className}`}>
       {children}
     </section>
   );

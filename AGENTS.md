@@ -25,6 +25,7 @@
 - `app/HomeClient.js`：客户端首页，包含筛选、搜索、赛事、新闻、直播源、近三天录像、排行等 UI。
 - `app/layout.js`：根布局和页面 metadata。
 - `app/globals.css`：全局样式和 Tailwind 入口。
+- `app/api/content/route.js`：首页聚合查询接口，一次返回赛事、新闻和近三天录像，用于搜索与筛选提速。
 - `app/api/matches/route.js`：赛事列表接口。
 - `app/api/news/route.js`：新闻列表接口。
 - `app/api/videos/route.js`：近三天录像接口，复用新闻表。
@@ -75,6 +76,7 @@
 - 新闻图片优先使用 RSS 图片字段；缺失时抓原文页的 `og:image`、`twitter:image`、JSON-LD 图片或正文首图入库。若上游页面不暴露可用图片，或远程图片加载失败，前端继续显示兜底占位。
 - 录像来源：直播吧篮球、足球录像页面；录像写入 `sports_articles` 并通过 `raw.contentType = "recording"` 标记，查询仅返回近三天内容。录像缩略图和标题都应保留来源跳转。
 - 赛事数据按钮优先使用原始数据里的技术统计、比分、赛况链接，缺失时回退到赛事来源链接。
+- 搜索和筛选优先走 `/api/content` 聚合接口，避免前端一次交互触发多个 Netlify Function 请求；客户端可缓存当前页面内相同条件的查询结果。
 - 同步会清理旧的 BBC/ESPN 英文新闻记录。
 - 同步结果写入 `sports_sync_runs`，状态包括 `success`、`partial`、`failed`。
 
