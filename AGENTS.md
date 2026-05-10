@@ -67,11 +67,12 @@
 
 ## 数据同步
 
-- Netlify 定时函数 `sync-sports-content` 每小时执行一次。
+- Netlify 定时函数 `sync-sports-content` 每 3 小时执行一次，cron 为 `0 */3 * * *`。
 - 同步逻辑在 `lib/sportsSync.js`。
 - 赛事来源：ESPN 足球/欧冠/NBA scoreboard、TheSportsDB 联赛事件。
 - 赛事联盟和球队名称需通过 `lib/sportsI18n.js` 中文化；同步入库和查询展示都应调用该映射，避免页面出现英文赛事信息。
 - 新闻来源：中国新闻网体育 RSS，按标题关键词归类到足球、篮球、电竞；虎扑电竞 RSS。
+- 新闻图片优先使用 RSS 图片字段；缺失时抓原文页的 `og:image`、`twitter:image`、JSON-LD 图片或正文首图入库。若上游页面不暴露可用图片，前端继续显示兜底占位。
 - 录像来源：直播吧篮球、足球录像页面；录像写入 `sports_articles` 并通过 `raw.contentType = "recording"` 标记，查询仅返回近三天内容。
 - 同步会清理旧的 BBC/ESPN 英文新闻记录。
 - 同步结果写入 `sports_sync_runs`，状态包括 `success`、`partial`、`failed`。

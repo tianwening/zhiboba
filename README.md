@@ -10,7 +10,8 @@
 - 直播源：按篮球、足球、电竞罗列常用直播入口。
 - 近三天录像：展示篮球、足球、电竞相关录像内容和来源链接。
 - 热门排行：根据热度字段展示新闻排行。
-- 内容同步：通过 Netlify 定时函数同步外部体育数据、中文 RSS 新闻和录像内容。
+- 内容同步：通过 Netlify 定时函数每 3 小时同步外部体育数据、中文 RSS 新闻和录像内容。
+- 新闻图片：RSS 未提供图片时，会抓取原文页的 `og:image`、`twitter:image`、JSON-LD 图片或正文首图入库。
 
 ## 技术栈
 
@@ -69,7 +70,7 @@ touch .env.local
 - `public.sports_sync_runs`
 - `public.sports_news_appointments`
 
-Netlify 函数 `sync-sports-content` 每小时运行一次，主要同步：
+Netlify 函数 `sync-sports-content` 每 3 小时运行一次，主要同步：
 
 - ESPN 足球、欧冠、NBA scoreboard
 - TheSportsDB 联赛事件
@@ -77,7 +78,7 @@ Netlify 函数 `sync-sports-content` 每小时运行一次，主要同步：
 - 虎扑电竞 RSS
 - 直播吧篮球、足球录像页面
 
-同步逻辑位于 `lib/sportsSync.js`，查询展示逻辑位于 `lib/sportsData.js`。同步会清理旧的 BBC/ESPN 英文新闻记录；录像记录通过 `raw.contentType = "recording"` 标记，接口仅返回近三天录像。
+同步逻辑位于 `lib/sportsSync.js`，查询展示逻辑位于 `lib/sportsData.js`。同步会清理旧的 BBC/ESPN 英文新闻记录；录像记录通过 `raw.contentType = "recording"` 标记，接口仅返回近三天录像。新闻图片优先使用 RSS 图片字段，缺失时抓原文页图片；如果上游原文也不暴露可用图片，前端仍显示兜底占位。
 
 ## 目录结构
 
