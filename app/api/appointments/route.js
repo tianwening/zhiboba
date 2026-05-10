@@ -20,8 +20,6 @@ const ALLOWED_CATEGORIES = new Set([
   "football",
   "basketball",
   "esports",
-  "tennis",
-  "general",
 ]);
 
 export const runtime = "nodejs";

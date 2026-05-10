@@ -1,14 +1,16 @@
 # 球赛速递
 
-`zhiboba` 是一个中文体育赛事与新闻聚合项目，基于公开体育数据和新闻源展示赛程、比分状态、体育新闻、带图内容和热门排行。
+`zhiboba` 是一个中文体育赛事与新闻聚合项目，基于公开体育数据和中文新闻源展示赛程、比分状态、体育新闻、直播入口、近三天录像和热门排行。
 
 ## 功能概览
 
 - 赛事中心：按日期、运动类型、比赛状态筛选赛程。
-- 体育新闻：按分类展示足球、篮球、电竞、网球和综合新闻。
-- 图片 / 集锦：展示带图片的新闻内容和来源链接。
+- 赛事中文化：同步时将常见赛事联盟、足球队和 NBA 球队名称写入为中文，查询时也做展示兜底翻译。
+- 体育新闻：按分类展示足球、篮球、电竞新闻。
+- 直播源：按篮球、足球、电竞罗列常用直播入口。
+- 近三天录像：展示篮球、足球、电竞相关录像内容和来源链接。
 - 热门排行：根据热度字段展示新闻排行。
-- 内容同步：通过 Netlify 定时函数同步外部体育数据和 RSS 内容。
+- 内容同步：通过 Netlify 定时函数同步外部体育数据、中文 RSS 新闻和录像内容。
 
 ## 技术栈
 
@@ -43,10 +45,10 @@ npm run lint     # 运行 ESLint 检查
 
 ## 环境变量
 
-复制 `.env.example` 并配置本地环境变量：
+本地开发时按需创建 `.env.local`，并配置以下变量：
 
 ```bash
-cp .env.example .env.local
+touch .env.local
 ```
 
 主要变量：
@@ -71,10 +73,11 @@ Netlify 函数 `sync-sports-content` 每小时运行一次，主要同步：
 
 - ESPN 足球、欧冠、NBA scoreboard
 - TheSportsDB 联赛事件
-- BBC Sport Football RSS
-- ESPN NBA / Soccer RSS
+- 中国新闻网体育 RSS，按标题关键词归类到足球、篮球、电竞
+- 虎扑电竞 RSS
+- 直播吧篮球、足球录像页面
 
-同步逻辑位于 `lib/sportsSync.js`，查询展示逻辑位于 `lib/sportsData.js`。
+同步逻辑位于 `lib/sportsSync.js`，查询展示逻辑位于 `lib/sportsData.js`。同步会清理旧的 BBC/ESPN 英文新闻记录；录像记录通过 `raw.contentType = "recording"` 标记，接口仅返回近三天录像。
 
 ## 目录结构
 
@@ -92,6 +95,7 @@ app/
 lib/
   db.js                 # PostgreSQL 连接池
   sportsData.js         # 页面数据查询
+  sportsI18n.js         # 赛事联盟和球队名称中文化
   sportsSync.js         # 外部数据同步
 netlify/
   functions/            # Netlify 定时函数

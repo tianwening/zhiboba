@@ -9,8 +9,6 @@ const sports = [
   { key: "football", label: "足球" },
   { key: "basketball", label: "篮球" },
   { key: "esports", label: "电竞" },
-  { key: "tennis", label: "网球" },
-  { key: "general", label: "综合" },
 ];
 
 const statuses = [
@@ -25,7 +23,6 @@ const newsCategories = [
   { key: "football", label: "足球" },
   { key: "basketball", label: "篮球" },
   { key: "esports", label: "电竞" },
-  { key: "general", label: "综合" },
 ];
 
 const statusLabel = {
@@ -49,19 +46,47 @@ const featureCards = [
   },
   {
     label: "篮球热榜",
-    title: "NBA 每日赛程",
+    title: "美职篮每日赛程",
     desc: "关注开赛时间和赛后比分。",
     color: "border-t-accent",
   },
   {
     label: "实时内容",
-    title: "新闻与图片更新",
-    desc: "定时同步公开来源内容。",
+    title: "中文新闻与录像",
+    desc: "新闻改用中文源，录像仅保留近三天。",
     color: "border-t-[#2563a8]",
   },
 ];
 
-const shortcuts = ["完场比分", "赛程日历", "伤停名单", "积分榜", "转会动态", "直播预约"];
+const liveSources = [
+  {
+    sport: "basketball",
+    label: "篮球",
+    sources: [
+      { name: "央视体育 NBA", url: "https://sports.cctv.com/nba/" },
+      { name: "腾讯体育篮球", url: "https://sports.qq.com/kbsweb/" },
+      { name: "咪咕篮球", url: "https://www.miguvideo.com/mgs/website/prd/sportLive.html" },
+    ],
+  },
+  {
+    sport: "football",
+    label: "足球",
+    sources: [
+      { name: "央视体育足球", url: "https://sports.cctv.com/football/" },
+      { name: "咪咕足球", url: "https://www.miguvideo.com/mgs/website/prd/sportLive.html" },
+      { name: "懂球帝直播", url: "https://www.dongqiudi.com/live" },
+    ],
+  },
+  {
+    sport: "esports",
+    label: "电竞",
+    sources: [
+      { name: "虎牙电竞", url: "https://www.huya.com/g/lol" },
+      { name: "斗鱼电竞", url: "https://www.douyu.com/directory/game/LOL" },
+      { name: "哔哩哔哩电竞", url: "https://live.bilibili.com/6" },
+    ],
+  },
+];
 
 function dateTabs() {
   const formatter = new Intl.DateTimeFormat("zh-CN", {
@@ -91,7 +116,7 @@ function includesQuery(item, query) {
 }
 
 function categoryName(key) {
-  return newsCategories.find((item) => item.key === key)?.label ?? "综合";
+  return newsCategories.find((item) => item.key === key)?.label ?? "体育";
 }
 
 function scrollToId(id) {
@@ -167,7 +192,10 @@ function useSportsContent({
           category: newsCategory,
           q: query,
         });
-        const videoUrl = apiUrl("/api/videos", { q: query });
+        const videoUrl = apiUrl("/api/videos", {
+          category: newsCategory,
+          q: query,
+        });
 
         const [matchResponse, newsResponse, videoResponse] = await Promise.all([
           fetch(matchUrl, { signal: controller.signal }),
@@ -275,6 +303,11 @@ export default function HomeClient({
       return;
     }
 
+    if (nextNav === "live") {
+      scrollToId("livePanel");
+      return;
+    }
+
     scrollToId(nextNav === "videos" ? "videoPanel" : "schedulePanel");
   }
 
@@ -329,9 +362,9 @@ export default function HomeClient({
           </section>
 
           <aside className="grid gap-4 md:grid-cols-2 lg:grid-cols-1" aria-label="侧栏内容">
+            <LivePanel />
             <VideoPanel videos={videos} loading={loading} />
             <RankPanel items={rankedNews} loading={loading} />
-            <ShortcutPanel />
           </aside>
         </div>
       </main>
@@ -359,10 +392,8 @@ function SiteHeader({
     { label: "足球", sport: "football" },
     { label: "篮球", sport: "basketball" },
     { label: "电竞", sport: "esports" },
-    { label: "网球", sport: "tennis" },
-    { label: "综合", sport: "general" },
+    { label: "直播", nav: "live" },
     { label: "录像", nav: "videos" },
-    { label: "数据", nav: "data" },
   ];
 
   return (
@@ -443,16 +474,16 @@ function HeroBand({ updatedAt }) {
   return (
     <section className="mb-4 flex flex-col items-start justify-between gap-5 rounded-lg bg-[linear-gradient(120deg,rgba(17,89,77,0.95),rgba(29,122,107,0.88)),linear-gradient(45deg,#0f3f3a,#2563a8)] p-4 text-white shadow-portal sm:min-h-40 sm:p-6 lg:flex-row lg:items-end" aria-labelledby="today-title">
       <div>
-        <p className="mb-1.5 text-xs font-extrabold uppercase text-white/70">Live Sports Hub</p>
+        <p className="mb-1.5 text-xs font-extrabold text-white/70">体育赛事中心</p>
         <h1 id="today-title" className="max-w-[680px] [overflow-wrap:anywhere] text-2xl font-extrabold leading-tight sm:text-[34px]">
           真实赛程、比分和体育要闻一屏掌握
         </h1>
         <p className="mt-3 max-w-[680px] text-sm leading-6 text-white/78 sm:text-base">
-          足球和篮球内容定时同步，保留来源链接与远程图片，方便后续扩展更多赛事。
+          只保留足球、篮球、电竞三个频道，新闻使用中文来源，直播入口和近三天录像集中展示。
         </p>
       </div>
       <div className="grid w-full gap-2 text-sm lg:w-[330px]" aria-label="同步状态">
-        {["足球赛程实时入库", "篮球赛果自动更新", `最近同步 ${formatUpdatedAt(updatedAt)}`].map((item) => (
+        {["足球赛程实时入库", "篮球赛果自动更新", "电竞新闻持续更新", `最近同步 ${formatUpdatedAt(updatedAt)}`].map((item) => (
           <span key={item} className="block rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white/90">
             {item}
           </span>
@@ -492,7 +523,7 @@ function SchedulePanel({
     <Panel id="schedulePanel">
       <div className="flex flex-col gap-3 border-b border-[#d9e2ee] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="mb-1 text-xs font-extrabold uppercase text-brand">Match Center</p>
+          <p className="mb-1 text-xs font-extrabold text-brand">赛事中心</p>
           <h2 className="text-lg font-extrabold sm:text-xl">赛事中心</h2>
         </div>
         <TabGroup items={dates} activeKey={date} onChange={onDateChange} includeText />
@@ -565,7 +596,7 @@ function NewsPanel({ newsCategory, query, news: newsItems, loading, onNewsCatego
     <Panel>
       <div className="flex flex-col gap-3 border-b border-[#d9e2ee] p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="mb-1 text-xs font-extrabold uppercase text-brand">News Feed</p>
+          <p className="mb-1 text-xs font-extrabold text-brand">中文资讯</p>
           <h2 className="text-lg font-extrabold sm:text-xl">体育新闻</h2>
         </div>
         <TabGroup
@@ -634,10 +665,10 @@ function ImageFrame({ src, alt }) {
 function VideoPanel({ videos: videoItems, loading }) {
   return (
     <Panel id="videoPanel">
-      <SideHead title="图片 / 集锦" />
+      <SideHead title="近三天录像" />
       <div className="px-4 pb-4">
         {loading ? (
-          <LoadingRows label="正在加载图片内容" compact />
+          <LoadingRows label="正在加载录像" compact />
         ) : videoItems.length ? (
           videoItems.map((video) => (
             <article key={`${video.source}-${video.id}`} className="grid grid-cols-[86px_1fr] items-center gap-3 border-b border-[#d9e2ee] py-3 last:border-b-0">
@@ -646,7 +677,7 @@ function VideoPanel({ videos: videoItems, loading }) {
                   <img className="h-[54px] w-[86px] rounded-md object-cover" src={video.imageUrl} alt={video.title} loading="lazy" />
                 ) : (
                   <div className="grid h-[54px] w-[86px] place-items-center rounded-md bg-[linear-gradient(135deg,#123c69,#1d7a6b)] text-xs font-black text-white">
-                    图片
+                    录像
                   </div>
                 )}
               </a>
@@ -657,8 +688,37 @@ function VideoPanel({ videos: videoItems, loading }) {
             </article>
           ))
         ) : (
-          <EmptyState>暂无带图内容。</EmptyState>
+          <EmptyState>近三天暂无录像。</EmptyState>
         )}
+      </div>
+    </Panel>
+  );
+}
+
+function LivePanel() {
+  return (
+    <Panel id="livePanel">
+      <SideHead title="直播源" />
+      <div className="grid gap-3 px-4 pb-4">
+        {liveSources.map((group) => (
+          <section key={group.sport} aria-label={`${group.label}直播源`}>
+            <h3 className="mb-2 text-sm font-extrabold text-brand-deeper">{group.label}</h3>
+            <div className="grid gap-2">
+              {group.sources.map((source) => (
+                <a
+                  key={source.name}
+                  className="flex min-h-10 items-center justify-between rounded-md border border-[#d9e2ee] bg-[#f8fbfe] px-3 text-sm font-extrabold text-[#182230] transition hover:border-brand hover:text-brand"
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>{source.name}</span>
+                  <span className="text-xs text-[#667085]">进入</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </Panel>
   );
@@ -686,21 +746,6 @@ function RankPanel({ items, loading }) {
           <li className="block py-8 text-center text-[#667085]">暂无排行结果</li>
         )}
       </ol>
-    </Panel>
-  );
-}
-
-function ShortcutPanel() {
-  return (
-    <Panel className="md:col-span-2 lg:col-span-1">
-      <SideHead title="常用入口" />
-      <div className="grid grid-cols-2 gap-2 px-4 pb-4">
-        {shortcuts.map((item) => (
-          <a key={item} className="grid min-h-10 place-items-center rounded-md border border-[#d9e2ee] bg-[#eef4fb] text-sm font-extrabold text-brand-deeper sm:text-base" href="#">
-            {item}
-          </a>
-        ))}
-      </div>
     </Panel>
   );
 }

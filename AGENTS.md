@@ -6,8 +6,8 @@
 
 - 项目名称：`zhiboba`
 - 业务定位：中文体育赛事与新闻聚合站，当前页面品牌为“球赛速递”。
-- 核心能力：展示赛事赛程、比分状态、体育新闻、带图内容、热门排行和常用入口。
-- 数据来源：公开体育数据和新闻源，包括 ESPN scoreboard、TheSportsDB、BBC/ESPN RSS。
+- 核心能力：展示赛事赛程、比分状态、中文体育新闻、直播入口、近三天录像和热门排行。
+- 数据来源：公开体育数据和中文新闻/录像源，包括 ESPN scoreboard、TheSportsDB、中国新闻网体育 RSS、虎扑电竞 RSS、直播吧录像页面。
 - 数据存储：PostgreSQL，代码默认读取 `POSTGRES_SESSION_POOL_URL`、`POSTGRES_URL` 或 `DATABASE_URL`。
 
 ## 技术栈
@@ -22,16 +22,17 @@
 ## 主要目录
 
 - `app/page.js`：首页服务端入口，负责首屏取数并渲染客户端组件。
-- `app/HomeClient.js`：客户端首页，包含筛选、搜索、赛事、新闻、图片/集锦、排行等 UI。
+- `app/HomeClient.js`：客户端首页，包含筛选、搜索、赛事、新闻、直播源、近三天录像、排行等 UI。
 - `app/layout.js`：根布局和页面 metadata。
 - `app/globals.css`：全局样式和 Tailwind 入口。
 - `app/api/matches/route.js`：赛事列表接口。
 - `app/api/news/route.js`：新闻列表接口。
-- `app/api/videos/route.js`：带图内容接口，复用新闻表。
+- `app/api/videos/route.js`：近三天录像接口，复用新闻表。
 - `app/api/appointments/route.js`：新闻预约数据接口。
 - `README.md`：项目介绍、启动方式、技术栈和数据同步说明。
 - `lib/db.js`：PostgreSQL 连接池。
-- `lib/sportsData.js`：查询赛事、新闻、带图内容。
+- `lib/sportsData.js`：查询赛事、新闻、近三天录像。
+- `lib/sportsI18n.js`：赛事联盟和球队名称中文化映射。
 - `lib/sportsSync.js`：拉取外部源并 upsert 到数据库。
 - `netlify/functions/sync-sports-content.js`：Netlify 每小时同步函数。
 - `netlify.toml`：Netlify 函数目录和打包配置。
@@ -50,9 +51,8 @@
 - `POSTGRES_URL`：备用 PostgreSQL 连接串。
 - `DATABASE_URL`：备用 PostgreSQL 连接串。
 - `THESPORTSDB_API_KEY`：TheSportsDB API key；为空时使用公开测试 key `3`。
-- `FOOTBALL_DATA_TOKEN`、`BALLDONTLIE_API_KEY`：已在 `.env.example` 预留，当前代码未实际使用。
 
-不要提交真实密钥。新增依赖环境变量时，同步更新 `.env.example` 和本文件。
+不要提交真实密钥。新增依赖环境变量时，同步更新本文件；如影响项目介绍、启动方式或部署说明，也要同步更新 `README.md`。
 
 ## 数据表约定
 
@@ -70,7 +70,10 @@
 - Netlify 定时函数 `sync-sports-content` 每小时执行一次。
 - 同步逻辑在 `lib/sportsSync.js`。
 - 赛事来源：ESPN 足球/欧冠/NBA scoreboard、TheSportsDB 联赛事件。
-- 新闻来源：BBC Sport Football、ESPN NBA、ESPN Soccer RSS。
+- 赛事联盟和球队名称需通过 `lib/sportsI18n.js` 中文化；同步入库和查询展示都应调用该映射，避免页面出现英文赛事信息。
+- 新闻来源：中国新闻网体育 RSS，按标题关键词归类到足球、篮球、电竞；虎扑电竞 RSS。
+- 录像来源：直播吧篮球、足球录像页面；录像写入 `sports_articles` 并通过 `raw.contentType = "recording"` 标记，查询仅返回近三天内容。
+- 同步会清理旧的 BBC/ESPN 英文新闻记录。
 - 同步结果写入 `sports_sync_runs`，状态包括 `success`、`partial`、`failed`。
 
 ## 开发规范
