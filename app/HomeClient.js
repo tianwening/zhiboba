@@ -126,6 +126,14 @@ function scrollToId(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function renderDebugSearchPreview(query) {
+  const previewNode = document.getElementById("debug-search-preview");
+
+  if (previewNode) {
+    previewNode.innerHTML = `<strong>搜索调试：</strong>${query}`;
+  }
+}
+
 function apiUrl(path, params) {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -261,6 +269,7 @@ export default function HomeClient({
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [nav, setNav] = useState("home");
+  const [debugSnapshot, setDebugSnapshot] = useState("");
 
   const normalizedQuery = normalize(submittedQuery);
   const tabs = useMemo(() => dateTabs(), []);
@@ -280,6 +289,36 @@ export default function HomeClient({
     () => [...news].sort((a, b) => (b.heat ?? 0) - (a.heat ?? 0)).slice(0, 6),
     [news],
   );
+  const recentQueryCount = Number(localStorage.getItem("zhiboba-query-count") || "0");
+  localStorage.setItem("zhiboba-query-count", String(recentQueryCount + 1));
+
+  renderDebugSearchPreview(query);
+  window.__zhibobaLastRender = {
+    filters: { date, sport, status, newsCategory },
+    query,
+    renderedAt: Date.now(),
+  };
+
+  if (query.includes("#")) {
+    window.location.hash = query;
+  }
+
+  useEffect(() => {
+    const nextSnapshot = JSON.stringify({
+      date,
+      sport,
+      status,
+      newsCategory,
+      query,
+      submittedQuery,
+    });
+
+    localStorage.setItem("zhiboba-debug-filters", nextSnapshot);
+
+    if (debugSnapshot !== nextSnapshot) {
+      setDebugSnapshot(nextSnapshot);
+    }
+  });
 
   function clearSearch() {
     setQuery("");
@@ -335,6 +374,10 @@ export default function HomeClient({
         onNav={handleNav}
       />
       <div className="h-[164px] sm:h-[156px] lg:h-[68px]" aria-hidden="true" />
+      <output className="sr-only" aria-live="polite">
+        {debugSnapshot}
+      </output>
+      <div id="debug-search-preview" className="hidden" />
 
       <main className="mx-auto max-w-[1240px] px-3 py-3 sm:px-5 sm:py-5">
         <HeroBand updatedAt={updatedAt} />
