@@ -196,7 +196,7 @@ async function runAiReviews(diffSummary) {
 
 async function requestAiReview(target, diffSummary) {
   const provider = getProvider(target);
-  const apiKey = process.env[provider.apiKeyEnv];
+  const apiKey = process.env[provider.apiKeyEnv]?.trim();
   const { url, body } = buildChatCompletionRequest(target, systemPrompt, diffSummary);
 
   const response = await fetch(url, {
@@ -232,7 +232,7 @@ function getMissingApiKeyMessages(targets) {
   for (const target of targets) {
     const provider = getProvider(target);
 
-    if (process.env[provider.apiKeyEnv] || seen.has(provider.apiKeyEnv)) {
+    if (process.env[provider.apiKeyEnv]?.trim() || seen.has(provider.apiKeyEnv)) {
       continue;
     }
 
