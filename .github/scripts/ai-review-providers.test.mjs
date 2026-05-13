@@ -39,7 +39,7 @@ test("buildChatCompletionRequest creates an OpenAI-compatible request", () => {
     "diff summary"
   );
 
-  assert.equal(request.url, "https://api.minimax.io/v1/chat/completions");
+  assert.equal(request.url, "https://api.minimaxi.com/v1/chat/completions");
   assert.deepEqual(request.body, {
     model: "MiniMax-M2.7-highspeed",
     messages: [

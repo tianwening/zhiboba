@@ -9,7 +9,7 @@ const defaultTargets = [
 export const providers = {
   minimax: {
     apiKeyEnv: "MINIMAX_API_KEY",
-    baseUrl: "https://api.minimax.io/v1",
+    baseUrl: "https://api.minimaxi.com/v1",
   },
   openai: {
     apiKeyEnv: "OPENAI_API_KEY",

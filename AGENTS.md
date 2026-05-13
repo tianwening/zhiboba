@@ -92,6 +92,7 @@
 - 工作流读取 PR diff，按 `AI_REVIEW_TARGETS` 逐个调用配置的 AI 模型做中文代码审计，并通过 PR 评论回写或更新同一条审计结果。
 - 启用前需在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中配置对应 provider 的 API key；默认 MiniMax 配置需要 `MINIMAX_API_KEY`。
 - `AI_REVIEW_TARGETS` 中每个 target 包含 `name`、`provider` 和 `model`；当前 provider 支持 `minimax` 与 `openai`。
+- MiniMax provider 默认调用 `https://api.minimaxi.com/v1/chat/completions`。
 
 ## 开发规范
 

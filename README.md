@@ -69,6 +69,8 @@ GitHub Actions 需要额外配置：
 - `OPENAI_API_KEY`：可选的仓库 Actions secret；仅在 `AI_REVIEW_TARGETS` 配置了 `openai` provider 时需要。
 - `AI_REVIEW_TARGETS`：可选的仓库 Actions variable，JSON 数组，用于配置一个或多个审计模型；为空时默认使用 MiniMax。
 
+MiniMax provider 默认调用 `https://api.minimaxi.com/v1/chat/completions`。
+
 `AI_REVIEW_TARGETS` 示例：
 
 ```json
