@@ -71,6 +71,10 @@ await upsertPrComment(`${reviewMarker}
 
 ${formatReviewResults(reviewResults)}`);
 
+if (reviewResults.every((result) => !result.ok)) {
+  throw new Error("All configured AI review targets failed.");
+}
+
 
 async function readJson(path) {
   const fs = await import("node:fs/promises");
