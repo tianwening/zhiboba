@@ -30,6 +30,9 @@
 - `app/api/news/route.js`：新闻列表接口。
 - `app/api/videos/route.js`：近三天录像接口，复用新闻表。
 - `app/api/appointments/route.js`：新闻预约数据接口。
+- `.github/workflows/ai-pr-review.yml`：PR 指向 `main` 时触发 AI 代码审计。
+- `.github/scripts/ai-pr-review.mjs`：拉取 PR diff、调用配置的 AI 代码审计模型并回写 PR 评论。
+- `.github/scripts/ai-review-providers.mjs`：AI 代码审计 provider 和模型 target 配置适配层。
 - `README.md`：项目介绍、启动方式、技术栈和数据同步说明。
 - `lib/db.js`：PostgreSQL 连接池。
 - `lib/sportsData.js`：查询赛事、新闻、近三天录像。
@@ -52,6 +55,9 @@
 - `POSTGRES_URL`：备用 PostgreSQL 连接串。
 - `DATABASE_URL`：备用 PostgreSQL 连接串。
 - `THESPORTSDB_API_KEY`：TheSportsDB API key；为空时使用公开测试 key `3`。
+- `MINIMAX_API_KEY`：GitHub Actions secret，用于 MiniMax PR AI 代码审计；不要写入本地文件或提交到仓库。
+- `OPENAI_API_KEY`：GitHub Actions secret，可选；仅在 `AI_REVIEW_TARGETS` 配置了 `openai` provider 时需要。
+- `AI_REVIEW_TARGETS`：GitHub Actions variable，可选；JSON 数组，用于配置一个或多个 PR AI 代码审计模型，默认使用 MiniMax `MiniMax-M2.7-highspeed`。
 
 不要提交真实密钥。新增依赖环境变量时，同步更新本文件；如影响项目介绍、启动方式或部署说明，也要同步更新 `README.md`。
 
@@ -79,6 +85,13 @@
 - 搜索和筛选优先走 `/api/content` 聚合接口，避免前端一次交互触发多个 Netlify Function 请求；客户端可缓存当前页面内相同条件的查询结果。
 - 同步会清理旧的 BBC/ESPN 英文新闻记录。
 - 同步结果写入 `sports_sync_runs`，状态包括 `success`、`partial`、`failed`。
+
+## GitHub Actions
+
+- `AI PR Code Review` 工作流在其他分支向 `main` 创建、更新或重新打开 PR 时运行，草稿 PR 不运行。
+- 工作流读取 PR diff，按 `AI_REVIEW_TARGETS` 逐个调用配置的 AI 模型做中文代码审计，并通过 PR 评论回写或更新同一条审计结果。
+- 启用前需在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中配置对应 provider 的 API key；默认 MiniMax 配置需要 `MINIMAX_API_KEY`。
+- `AI_REVIEW_TARGETS` 中每个 target 包含 `name`、`provider` 和 `model`；当前 provider 支持 `minimax` 与 `openai`。
 
 ## 开发规范
 

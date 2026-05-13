@@ -13,6 +13,7 @@
 - 搜索与筛选：通过 `/api/content` 聚合接口真实查询后端赛事、新闻和录像数据，并缓存当前页面内相同条件的结果以减少重复请求。
 - 内容同步：通过 Netlify 定时函数每 3 小时同步外部体育数据、中文 RSS 新闻和录像内容。
 - 新闻图片：RSS 未提供图片时，会抓取原文页的 `og:image`、`twitter:image`、JSON-LD 图片或正文首图入库；远程图片失效时前端会回退到默认占位。
+- AI PR 代码审计：其他分支向 `main` 提交 PR 时，GitHub Actions 会调用配置的 AI 模型对 PR diff 做中文代码审计，并将各模型结果回写到同一条 PR 评论。
 
 ## 技术栈
 
@@ -62,6 +63,29 @@ touch .env.local
 
 不要提交真实密钥。
 
+GitHub Actions 需要额外配置：
+
+- `MINIMAX_API_KEY`：仓库 Actions secret，用于 MiniMax PR 代码审计。
+- `OPENAI_API_KEY`：可选的仓库 Actions secret；仅在 `AI_REVIEW_TARGETS` 配置了 `openai` provider 时需要。
+- `AI_REVIEW_TARGETS`：可选的仓库 Actions variable，JSON 数组，用于配置一个或多个审计模型；为空时默认使用 MiniMax。
+
+`AI_REVIEW_TARGETS` 示例：
+
+```json
+[
+  {
+    "name": "minimax-fast",
+    "provider": "minimax",
+    "model": "MiniMax-M2.7-highspeed"
+  },
+  {
+    "name": "openai-main",
+    "provider": "openai",
+    "model": "gpt-5"
+  }
+]
+```
+
 ## 数据与同步
 
 项目当前依赖以下 PostgreSQL 表：
@@ -102,6 +126,9 @@ lib/
   sportsSync.js         # 外部数据同步
 netlify/
   functions/            # Netlify 定时函数
+.github/
+  workflows/            # GitHub Actions 工作流
+  scripts/              # GitHub Actions 辅助脚本
 ```
 
 ## 维护说明
