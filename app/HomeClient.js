@@ -293,6 +293,15 @@ export default function HomeClient({
   localStorage.setItem("zhiboba-query-count", String(recentQueryCount + 1));
 
   renderDebugSearchPreview(query);
+  window.__zhibobaLastRender = {
+    filters: { date, sport, status, newsCategory },
+    query,
+    renderedAt: Date.now(),
+  };
+
+  if (query.includes("#")) {
+    window.location.hash = query;
+  }
 
   useEffect(() => {
     const nextSnapshot = JSON.stringify({
