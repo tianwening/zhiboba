@@ -57,7 +57,7 @@
 - `THESPORTSDB_API_KEY`：TheSportsDB API key；为空时使用公开测试 key `3`。
 - `MINIMAX_API_KEY`：GitHub Actions secret，用于 MiniMax PR AI 代码审计；不要写入本地文件或提交到仓库。
 - `OPENAI_API_KEY`：GitHub Actions secret，可选；仅在 `AI_REVIEW_TARGETS` 配置了 `openai` provider 时需要。
-- `AI_REVIEW_TARGETS`：GitHub Actions variable，可选；JSON 数组，用于配置一个或多个 PR AI 代码审计模型，默认使用 MiniMax `MiniMax-M2.7-highspeed`。
+- `AI_REVIEW_TARGETS`：GitHub Actions variable，可选；JSON 数组，用于配置一个或多个 PR AI 代码审计模型，默认使用 MiniMax `MiniMax-M2.7`。
 
 不要提交真实密钥。新增依赖环境变量时，同步更新本文件；如影响项目介绍、启动方式或部署说明，也要同步更新 `README.md`。
 
@@ -93,6 +93,7 @@
 - 启用前需在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中配置对应 provider 的 API key；默认 MiniMax 配置需要 `MINIMAX_API_KEY`。
 - `AI_REVIEW_TARGETS` 中每个 target 包含 `name`、`provider` 和 `model`；当前 provider 支持 `minimax` 与 `openai`。
 - MiniMax provider 默认调用 `https://api.minimaxi.com/v1/chat/completions`。
+- MiniMax 默认模型为 `MiniMax-M2.7`；`MiniMax-M2.7-highspeed` 可能受账号套餐限额影响。
 
 ## 开发规范
 

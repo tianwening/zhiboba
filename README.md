@@ -70,15 +70,16 @@ GitHub Actions 需要额外配置：
 - `AI_REVIEW_TARGETS`：可选的仓库 Actions variable，JSON 数组，用于配置一个或多个审计模型；为空时默认使用 MiniMax。
 
 MiniMax provider 默认调用 `https://api.minimaxi.com/v1/chat/completions`。
+默认模型为 `MiniMax-M2.7`；`MiniMax-M2.7-highspeed` 可能受账号套餐限额影响。
 
 `AI_REVIEW_TARGETS` 示例：
 
 ```json
 [
   {
-    "name": "minimax-fast",
+    "name": "minimax-main",
     "provider": "minimax",
-    "model": "MiniMax-M2.7-highspeed"
+    "model": "MiniMax-M2.7"
   },
   {
     "name": "openai-main",

@@ -12,7 +12,7 @@ test("parseReviewTargets defaults to MiniMax when no targets are configured", ()
     {
       name: "minimax-default",
       provider: "minimax",
-      model: "MiniMax-M2.7-highspeed",
+      model: "MiniMax-M2.7",
     },
   ]);
 });
@@ -21,12 +21,12 @@ test("parseReviewTargets accepts a JSON array of model targets", () => {
   assert.deepEqual(
     parseReviewTargets(
       JSON.stringify([
-        { name: "fast", provider: "minimax", model: "MiniMax-M2.7-highspeed" },
+        { name: "main", provider: "minimax", model: "MiniMax-M2.7" },
         { name: "main", provider: "openai", model: "gpt-5" },
       ])
     ),
     [
-      { name: "fast", provider: "minimax", model: "MiniMax-M2.7-highspeed" },
+      { name: "main", provider: "minimax", model: "MiniMax-M2.7" },
       { name: "main", provider: "openai", model: "gpt-5" },
     ]
   );
@@ -34,14 +34,14 @@ test("parseReviewTargets accepts a JSON array of model targets", () => {
 
 test("buildChatCompletionRequest creates an OpenAI-compatible request", () => {
   const request = buildChatCompletionRequest(
-    { provider: "minimax", model: "MiniMax-M2.7-highspeed" },
+    { provider: "minimax", model: "MiniMax-M2.7" },
     "system prompt",
     "diff summary"
   );
 
   assert.equal(request.url, "https://api.minimaxi.com/v1/chat/completions");
   assert.deepEqual(request.body, {
-    model: "MiniMax-M2.7-highspeed",
+    model: "MiniMax-M2.7",
     messages: [
       { role: "system", content: "system prompt" },
       { role: "user", content: "diff summary" },

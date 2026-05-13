@@ -2,7 +2,7 @@ const defaultTargets = [
   {
     name: "minimax-default",
     provider: "minimax",
-    model: "MiniMax-M2.7-highspeed",
+    model: "MiniMax-M2.7",
   },
 ];
 
